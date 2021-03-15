@@ -4,10 +4,13 @@ import (
 	"encoding/json"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	//"github.com/go-playground/validator"
 	"github.com/go-resty/resty/v2"
+	"github.com/prometheus/tsdb/labels"
+	"github.com/roylee0704/gron"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli/v2"
@@ -16,6 +19,13 @@ import (
 /*var (
 	validate *validator.Validate
 )*/
+
+type Metric struct {
+	Series labels.Labels
+
+	Timestamp int64
+	Value     float64
+}
 
 // Constants
 const (
@@ -27,7 +37,8 @@ const (
 
 // Global Vars
 var (
-	client = resty.New()
+	waitgroup sync.WaitGroup
+	client    = resty.New()
 )
 
 // SymbolPrice ..
@@ -155,5 +166,57 @@ func BTickerPrice(ctx *cli.Context) error {
 	output, _ := json.Marshal(search)
 	log.Info().Msg(string(output))
 
+	return nil
+}
+
+func BDaemon(ctx *cli.Context) error {
+	waitgroup.Add(1)
+	c := gron.New()
+
+	c.AddFunc(gron.Every(1*time.Minute), func() {
+		result := []struct {
+			Symbol string `json:"symbol"`
+			Price  string `json:"price"`
+		}{}
+
+		response, err := callAPIGet(ctx, APITickerPrice)
+		if err != nil {
+			log.Error().Msg(err.Error())
+			return
+		}
+
+		app := TSDatabase.Appender()
+		json.Unmarshal([]byte(response), &result)
+		for _, item := range result {
+			if strings.Contains(item.Symbol, "USDT") {
+				price, _ := strconv.ParseFloat(item.Price, 64)
+				data2 := Metric{
+					Series: labels.Labels{
+						labels.Label{
+							Name:  "symbol",
+							Value: item.Symbol,
+						},
+					},
+					Timestamp: time.Now().UnixNano() / int64(time.Millisecond),
+					Value:     price,
+				}
+				_, err := app.Add(data2.Series, data2.Timestamp, data2.Value)
+				if err != nil {
+					log.Error().Msg(err.Error())
+					continue
+				}
+				log.Info().Msg("Inserted symbols " + item.Symbol + ":" + item.Price)
+			}
+		}
+		if err := app.Commit(); err != nil {
+			log.Error().Msg(err.Error())
+		}
+		waitgroup.Done()
+	})
+
+	c.Start()
+	defer c.Stop()
+
+	waitgroup.Wait()
 	return nil
 }
