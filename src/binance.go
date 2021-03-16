@@ -2,9 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"os"
+	"os/signal"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	//"github.com/go-playground/validator"
@@ -27,6 +28,22 @@ type Metric struct {
 	Value     float64
 }
 
+type Query struct {
+	Promql  string `json:"promql"`
+	MinTime int64  `json:"mint"`
+	MaxTime int64  `json:"maxt"`
+}
+
+type Point struct {
+	T int64   `json:"t"`
+	V float64 `json:"v"`
+}
+
+type Series struct {
+	Labels labels.Labels `json:"labels"`
+	Points []point       `json:"points"`
+}
+
 // Constants
 const (
 	APIErrorTimeout = 1 * time.Minute
@@ -37,8 +54,7 @@ const (
 
 // Global Vars
 var (
-	waitgroup sync.WaitGroup
-	client    = resty.New()
+	client = resty.New()
 )
 
 // SymbolPrice ..
@@ -170,10 +186,9 @@ func BTickerPrice(ctx *cli.Context) error {
 }
 
 func BDaemon(ctx *cli.Context) error {
-	waitgroup.Add(1)
-	c := gron.New()
 
-	c.AddFunc(gron.Every(1*time.Minute), func() {
+	c := gron.New()
+	c.AddFunc(gron.Every(30*time.Second), func() {
 		result := []struct {
 			Symbol string `json:"symbol"`
 			Price  string `json:"price"`
@@ -205,18 +220,19 @@ func BDaemon(ctx *cli.Context) error {
 					log.Error().Msg(err.Error())
 					continue
 				}
-				log.Info().Msg("Inserted symbols " + item.Symbol + ":" + item.Price)
+				log.Info().Msg("Inserted symbol " + item.Symbol + ":" + item.Price)
 			}
 		}
 		if err := app.Commit(); err != nil {
 			log.Error().Msg(err.Error())
 		}
-		waitgroup.Done()
 	})
 
 	c.Start()
 	defer c.Stop()
 
-	waitgroup.Wait()
+	sig := make(chan os.Signal)
+	signal.Notify(sig, os.Interrupt, os.Kill)
+	<-sig
 	return nil
 }
