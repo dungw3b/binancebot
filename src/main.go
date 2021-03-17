@@ -5,9 +5,6 @@ import (
 	"sort"
 	"time"
 
-	plog "github.com/go-kit/kit/log"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/tsdb"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli/v2"
@@ -21,8 +18,10 @@ const (
 // Global Vars
 var (
 	ListSymbols    = "BTCUSDT,ETHUSDT"
-	RuleMonitoring string
-	TSDatabase     *tsdb.DB
+	RuleMonitoring = "culi"
+	IntervalQuery  = 60
+	APIKey         string
+	APISecret      string
 )
 
 func main() {
@@ -33,20 +32,71 @@ func main() {
 
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339})
 
-	// open tsdb
-	log.Info().Msg("Opening TSDB ./data")
-	TSDatabase, err = tsdb.Open(
-		"./data",
-		plog.NewLogfmtLogger(os.Stdout),
-		prometheus.NewRegistry(),
-		tsdb.DefaultOptions,
-	)
-	if err != nil {
-		log.Error().Msg("Can not open database")
-		log.Panic().Msg(err.Error())
+	app := &cli.App{
+		Name:  "Binance Client Bot",
+		Usage: "@dungw3b",
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:     "verbose",
+				Usage:    "Set debug logging",
+				Required: false,
+			},
+		},
+		Commands: []*cli.Command{
+			{
+				Name:   "price",
+				Usage:  "Latest price for symbols",
+				Action: BTickerPrice,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:        "symbols",
+						Usage:       "List of symbols",
+						Required:    false,
+						DefaultText: "BTCUSDT,ETHUSDT",
+						Value:       "BTCUSDT,ETHUSDT",
+						Destination: &ListSymbols,
+					},
+				},
+			},
+			{
+				Name:   "start",
+				Usage:  "Monitoring coin symbols for rule",
+				Action: BStart,
+				Flags: []cli.Flag{
+					/*&cli.StringFlag{
+						Name:        "apikey",
+						Usage:       "Binance API Key (required)",
+						Required:    true,
+						Destination: &APIKey,
+					},
+					&cli.StringFlag{
+						Name:        "secretkey",
+						Usage:       "Binance Secret Key (required)",
+						Required:    true,
+						Destination: &APISecret,
+					},*/
+					&cli.StringFlag{
+						Name:        "rule",
+						Usage:       "Rule for monitoring",
+						Required:    false,
+						DefaultText: "culi",
+						Value:       "culi",
+						Destination: &RuleMonitoring,
+					},
+					&cli.IntFlag{
+						Name:        "interval",
+						Usage:       "Interval time for query API in seconds",
+						Required:    false,
+						DefaultText: "60",
+						Value:       60,
+						Destination: &IntervalQuery,
+					},
+				},
+			},
+		},
 	}
 
-	app := &cli.App{
+	/*app := &cli.App{
 		Name:  "Binance Client Bot",
 		Usage: "@dungw3b",
 		Flags: []cli.Flag{
@@ -108,7 +158,7 @@ func main() {
 				},
 			},
 		},
-	}
+	}*/
 
 	sort.Sort(cli.FlagsByName(app.Flags))
 	sort.Sort(cli.CommandsByName(app.Commands))
