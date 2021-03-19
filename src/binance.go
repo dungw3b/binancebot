@@ -15,6 +15,7 @@ import (
 	"github.com/prometheus/tsdb"
 	"github.com/prometheus/tsdb/labels"
 	"github.com/roylee0704/gron"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli/v2"
 )
@@ -52,6 +53,8 @@ const (
 	APIPing         = "/api/v3/ping"
 	APITime         = "/api/v3/time"
 	APITickerPrice  = "/api/v3/ticker/price"
+	APIOrderTest    = "/api/v3/order/test"
+	APIOrder        = "/api/v3/order"
 )
 
 // Global Vars
@@ -171,7 +174,7 @@ func BStart(ctx *cli.Context) error {
 							Value: item.Symbol,
 						},
 					},
-					Timestamp: time.Now().UnixNano() / int64(time.Millisecond),
+					Timestamp: GetTimestampUTC(),
 					Value:     price,
 				}
 				_, err := app.Add(data2.Series, data2.Timestamp, data2.Value)
@@ -209,4 +212,152 @@ func QueryDB() {
 	matchers, err := PromQLToMatchers(q.Promql)
 
 	defer querier.Close()*/
+}
+
+func BOrderTest(ctx *cli.Context) error {
+	log.Info().Msg("---Start API Endpoint " + BinanceAPIEndPoint)
+
+	if ctx.Bool("verbose") {
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	}
+	log.Info().Msg("GET " + APIOrderTest)
+
+	// build parameters
+	/*
+		symbol=LTCBTC
+		&side=BUY
+		&type=LIMIT
+		&timeInForce=GTC
+		&quantity=1
+		&price=0.1
+		&recvWindow=5000
+		&timestamp=1499827319559
+	*/
+	params := "symbol=" + OrderSymbol
+	params = params + "&side=" + strings.ToUpper(OrderSide)
+	params = params + "&type=" + strings.ToUpper(OrderType)
+	params = params + "&timeInForce=GTC"
+	params = params + "&quantity=" + strconv.FormatFloat(OrderQuantity, 'f', 8, 64)
+	params = params + "&price=" + strconv.FormatFloat(OrderPrice, 'f', 8, 64)
+	params = params + "&timestamp=" + strconv.FormatInt(GetTimestampUTC(), 10)
+
+	signature := HMACSHA256(params, APISecret)
+	params = params + "&signature=" + signature
+
+	client.SetTimeout(APIErrorTimeout)
+
+	resp, err := client.R().
+		ForceContentType("application/json").
+		SetHeader("X-MBX-APIKEY", APIKey).
+		SetBody(params).
+		Post(BinanceAPIEndPoint + APIOrderTest)
+
+	if err != nil {
+		log.Error().Msg(err.Error())
+		log.Error().Msg(resp.String())
+		return err
+	}
+
+	if resp.StatusCode() != 200 {
+		log.Debug().Msg("Request Data         : " + params)
+		log.Error().Msg("Status Code          : " + strconv.Itoa(resp.StatusCode()))
+		log.Debug().Msg("Status               : " + resp.Status())
+		log.Debug().Msg("Proto                : " + resp.Proto())
+		log.Debug().Msg("Time                 : " + resp.Time().String())
+		log.Debug().Msg("Received At          : " + resp.ReceivedAt().String())
+		log.Debug().Msg("x-mbx-uuid           : " + resp.Header().Get("x-mbx-uuid"))
+		log.Debug().Msg("x-mbx-used-weight    : " + resp.Header().Get("x-mbx-used-weight"))
+		log.Debug().Msg("x-mbx-used-weight-1m : " + resp.Header().Get("x-mbx-used-weight-1m"))
+		log.Debug().Msg("Body                 : " + resp.String())
+		return err
+	}
+
+	if ctx.Bool("verbose") {
+		log.Debug().Msg("Request Data         : " + params)
+		log.Debug().Msg("Status Code          : " + strconv.Itoa(resp.StatusCode()))
+		log.Debug().Msg("Status               : " + resp.Status())
+		log.Debug().Msg("Proto                : " + resp.Proto())
+		log.Debug().Msg("Time                 : " + resp.Time().String())
+		log.Debug().Msg("Received At          : " + resp.ReceivedAt().String())
+		log.Debug().Msg("x-mbx-uuid           : " + resp.Header().Get("x-mbx-uuid"))
+		log.Debug().Msg("x-mbx-used-weight    : " + resp.Header().Get("x-mbx-used-weight"))
+		log.Debug().Msg("x-mbx-used-weight-1m : " + resp.Header().Get("x-mbx-used-weight-1m"))
+		log.Debug().Msg("Body                 : " + resp.String())
+	}
+
+	return nil
+}
+
+func BOrder(ctx *cli.Context) error {
+	log.Info().Msg("---Start API Endpoint " + BinanceAPIEndPoint)
+
+	if ctx.Bool("verbose") {
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	}
+	log.Info().Msg("GET " + APIOrder)
+
+	// build parameters
+	/*
+		symbol=LTCBTC
+		&side=BUY
+		&type=LIMIT
+		&timeInForce=GTC
+		&quantity=1
+		&price=0.1
+		&recvWindow=5000
+		&timestamp=1499827319559
+	*/
+	params := "symbol=" + OrderSymbol
+	params = params + "&side=" + strings.ToUpper(OrderSide)
+	params = params + "&type=" + strings.ToUpper(OrderType)
+	params = params + "&timeInForce=GTC"
+	params = params + "&quantity=" + strconv.FormatFloat(OrderQuantity, 'f', 8, 64)
+	params = params + "&price=" + strconv.FormatFloat(OrderPrice, 'f', 8, 64)
+	params = params + "&timestamp=" + strconv.FormatInt(GetTimestampUTC(), 10)
+
+	signature := HMACSHA256(params, APISecret)
+	params = params + "&signature=" + signature
+
+	client.SetTimeout(APIErrorTimeout)
+
+	resp, err := client.R().
+		ForceContentType("application/json").
+		SetHeader("X-MBX-APIKEY", APIKey).
+		SetBody(params).
+		Post(BinanceAPIEndPoint + APIOrder)
+
+	if err != nil {
+		log.Error().Msg(err.Error())
+		log.Error().Msg(resp.String())
+		return err
+	}
+
+	if resp.StatusCode() != 200 {
+		log.Debug().Msg("Request Data         : " + params)
+		log.Error().Msg("Status Code          : " + strconv.Itoa(resp.StatusCode()))
+		log.Debug().Msg("Status               : " + resp.Status())
+		log.Debug().Msg("Proto                : " + resp.Proto())
+		log.Debug().Msg("Time                 : " + resp.Time().String())
+		log.Debug().Msg("Received At          : " + resp.ReceivedAt().String())
+		log.Debug().Msg("x-mbx-uuid           : " + resp.Header().Get("x-mbx-uuid"))
+		log.Debug().Msg("x-mbx-used-weight    : " + resp.Header().Get("x-mbx-used-weight"))
+		log.Debug().Msg("x-mbx-used-weight-1m : " + resp.Header().Get("x-mbx-used-weight-1m"))
+		log.Debug().Msg("Body                 : " + resp.String())
+		return err
+	}
+
+	if ctx.Bool("verbose") {
+		log.Debug().Msg("Request Data         : " + params)
+		log.Debug().Msg("Status Code          : " + strconv.Itoa(resp.StatusCode()))
+		log.Debug().Msg("Status               : " + resp.Status())
+		log.Debug().Msg("Proto                : " + resp.Proto())
+		log.Debug().Msg("Time                 : " + resp.Time().String())
+		log.Debug().Msg("Received At          : " + resp.ReceivedAt().String())
+		log.Debug().Msg("x-mbx-uuid           : " + resp.Header().Get("x-mbx-uuid"))
+		log.Debug().Msg("x-mbx-used-weight    : " + resp.Header().Get("x-mbx-used-weight"))
+		log.Debug().Msg("x-mbx-used-weight-1m : " + resp.Header().Get("x-mbx-used-weight-1m"))
+		log.Debug().Msg("Body                 : " + resp.String())
+	}
+
+	return nil
 }

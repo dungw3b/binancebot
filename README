@@ -1,0 +1,11 @@
+Build
+```
+# cd src
+# ./build.sh
+```
+
+Usage:
+```
+# cd bin
+# ./bbot-linux-amd64 -h
+```

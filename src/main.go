@@ -22,6 +22,12 @@ var (
 	IntervalQuery  = 60
 	APIKey         string
 	APISecret      string
+
+	OrderSymbol   string
+	OrderSide     string
+	OrderType     string
+	OrderQuantity float64
+	OrderPrice    float64
 )
 
 func main() {
@@ -90,6 +96,104 @@ func main() {
 						DefaultText: "60",
 						Value:       60,
 						Destination: &IntervalQuery,
+					},
+				},
+			},
+			{
+				Name:   "ordertest",
+				Usage:  "Test new order creation",
+				Action: BOrderTest,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:        "apikey",
+						Usage:       "Binance API Key (required)",
+						Required:    true,
+						Destination: &APIKey,
+					},
+					&cli.StringFlag{
+						Name:        "secretkey",
+						Usage:       "Binance Secret Key (required)",
+						Required:    true,
+						Destination: &APISecret,
+					},
+					&cli.StringFlag{
+						Name:        "symbol",
+						Usage:       "Symbol for trading",
+						Required:    true,
+						Destination: &OrderSymbol,
+					},
+					&cli.StringFlag{
+						Name:        "side",
+						Usage:       "BUY, SELL",
+						Required:    true,
+						Destination: &OrderSide,
+					},
+					&cli.StringFlag{
+						Name:        "type",
+						Usage:       "LIMIT, MARKET, STOP_LOSS, STOP_LOSS_LIMIT, TAKE_PROFIT, TAKE_PROFIT_LIMIT, LIMIT_MAKER",
+						Required:    true,
+						Destination: &OrderType,
+					},
+					&cli.Float64Flag{
+						Name:        "quantity",
+						Usage:       "Quantity of symbol",
+						Required:    true,
+						Destination: &OrderQuantity,
+					},
+					&cli.Float64Flag{
+						Name:        "price",
+						Usage:       "Price of symbol",
+						Required:    true,
+						Destination: &OrderPrice,
+					},
+				},
+			},
+			{
+				Name:   "order",
+				Usage:  "Make a new order",
+				Action: BOrder,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:        "apikey",
+						Usage:       "Binance API Key (required)",
+						Required:    true,
+						Destination: &APIKey,
+					},
+					&cli.StringFlag{
+						Name:        "secretkey",
+						Usage:       "Binance Secret Key (required)",
+						Required:    true,
+						Destination: &APISecret,
+					},
+					&cli.StringFlag{
+						Name:        "symbol",
+						Usage:       "Symbol for trading",
+						Required:    true,
+						Destination: &OrderSymbol,
+					},
+					&cli.StringFlag{
+						Name:        "side",
+						Usage:       "BUY, SELL",
+						Required:    true,
+						Destination: &OrderSide,
+					},
+					&cli.StringFlag{
+						Name:        "type",
+						Usage:       "LIMIT, MARKET, STOP_LOSS, STOP_LOSS_LIMIT, TAKE_PROFIT, TAKE_PROFIT_LIMIT, LIMIT_MAKER",
+						Required:    true,
+						Destination: &OrderType,
+					},
+					&cli.Float64Flag{
+						Name:        "quantity",
+						Usage:       "Quantity of symbol",
+						Required:    true,
+						Destination: &OrderQuantity,
+					},
+					&cli.Float64Flag{
+						Name:        "price",
+						Usage:       "Price of symbol",
+						Required:    true,
+						Destination: &OrderPrice,
 					},
 				},
 			},

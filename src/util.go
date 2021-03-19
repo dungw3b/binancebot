@@ -1,8 +1,12 @@
 package main
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -73,4 +77,16 @@ func callAPIGet(ctx *cli.Context, api string) (string, error) {
 	}
 
 	return resp.String(), nil
+}
+
+func GetTimestampUTC() int64 {
+	return time.Now().UTC().UnixNano() / int64(time.Millisecond)
+}
+
+func HMACSHA256(str string, key string) string {
+	kbyte := []byte(key)
+	sig := hmac.New(sha256.New, kbyte)
+	sig.Write([]byte(str))
+
+	return hex.EncodeToString(sig.Sum(nil))
 }
