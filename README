@@ -9,3 +9,21 @@ Usage:
 # cd bin
 # ./bbot-linux-amd64 -h
 ```
+
+## Usage
+NAME:
+   Binance Client Bot - @dungw3b
+
+USAGE:
+   bbot-linux-amd64 [global options] command [command options] [arguments...]
+
+COMMANDS:
+   order      Make a new order
+   ordertest  Test new order creation
+   price      Latest price for symbols
+   start      Monitoring coin symbols for rule
+   help, h    Shows a list of commands or help for one command
+
+GLOBAL OPTIONS:
+   --verbose   Set debug logging (default: false)
+   --help, -h  show help (default: false)
