@@ -32,3 +32,28 @@ COMMANDS:
 GLOBAL OPTIONS:
    --verbose   Set debug logging (default: false)
    --help, -h  show help (default: false)
+
+Example
+```
+# ./bbot-linux-amd64 price --symbols ADAUSDT
+2021-03-19T08:42:26Z INF ---Start API Endpoint https://api.binance.com
+2021-03-19T08:42:26Z INF GET /api/v3/ticker/price
+2021-03-19T08:42:27Z INF Query list symbols "ADAUSDT"
+2021-03-19T08:42:27Z INF [{"symbol":"ADAUSDT","price":1.27632}]
+```
+
+```
+# ./bbot-linux-amd64 --verbose order --apikey XXXXXX --secretkey XXXXXX --symbol ADAUSDT --side buy --type LIMIT --quantity 10 --price 1.1
+2021-03-19T08:53:39Z INF ---Start API Endpoint https://api.binance.com
+2021-03-19T08:53:39Z INF GET /api/v3/order
+2021-03-19T08:53:40Z DBG Request Data         : symbol=ADAUSDT&side=BUY&type=LIMIT&timeInForce=GTC&quantity=10.00000000&price=1.10000000&timestamp=1616144019638&signature=265e111fd21e1a049722629413533308d0ffb3681c1844cf0f7db66d87c4b619
+2021-03-19T08:53:40Z DBG Status Code          : 200
+2021-03-19T08:53:40Z DBG Status               : 200 OK
+2021-03-19T08:53:40Z DBG Proto                : HTTP/2.0
+2021-03-19T08:53:40Z DBG Time                 : 901.2847ms
+2021-03-19T08:53:40Z DBG Received At          : 2021-03-19 15:53:40.5398652 +0700 +07 m=+0.903478401
+2021-03-19T08:53:40Z DBG x-mbx-uuid           : f5ed7259-589d-43ba-80fe-24ff4bf31a33
+2021-03-19T08:53:40Z DBG x-mbx-used-weight    : 18
+2021-03-19T08:53:40Z DBG x-mbx-used-weight-1m : 18
+2021-03-19T08:53:40Z DBG Body                 : {"symbol":"ADAUSDT","orderId":1148365606,"orderListId":-1,"clientOrderId":"BzaVp7uwYnwkgFM28wpWUP","transactTime":1616144019812,"price":"1.10000000","origQty":"10.00000000","executedQty":"0.00000000","cummulativeQuoteQty":"0.00000000","status":"NEW","timeInForce":"GTC","type":"LIMIT","side":"BUY","fills":[]}
+```
